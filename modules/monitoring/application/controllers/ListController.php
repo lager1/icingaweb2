@@ -495,6 +495,69 @@ class ListController extends Controller
     }
 
     /**
+     * List service groups
+     */
+    public function servicegroupGridAction()
+    {
+        $this->addTitleTab(
+            'servicegroup-grid',
+            $this->translate('Service Group Grid'),
+            $this->translate('Show the Service Group Grid')
+        );
+
+        $this->setAutorefreshInterval(12);
+
+        $serviceGroups = $this->backend->select()->from('servicegroupsummary', array(
+            'servicegroup_alias',
+            'servicegroup_name',
+            'services_critical_handled',
+            'services_critical_unhandled',
+            'services_ok',
+            'services_pending',
+            'services_total',
+            'services_unknown_handled',
+            'services_unknown_unhandled',
+            'services_warning_handled',
+            'services_warning_unhandled'
+        ));
+        $this->applyRestriction('monitoring/filter/objects', $serviceGroups);
+
+        $this->setupSortControl(array(
+            'servicegroup_alias'    => $this->translate('Service Group Name'),
+            'services_severity'     => $this->translate('Severity'),
+            'services_total'        => $this->translate('Total Services')
+        ), $serviceGroups);
+        $this->filterQuery($serviceGroups);
+
+        $this->view->serviceGroups = $serviceGroups;
+        $this->view->setHelperFunction('getStateClass', function ($serviceGroup) {
+            switch (true)
+            {
+                case $serviceGroup->services_critical_unhandled > 0:
+                    return 'state-critical';
+                case $serviceGroup->services_warning_unhandled > 0:
+                    return 'state-warning';
+                case $serviceGroup->services_unknown_unhandled > 0:
+                    return 'state-unknown';
+                case $serviceGroup->services_critical_handled > 0:
+                    return 'state-critical handled';
+                case $serviceGroup->services_warning_handled > 0:
+                    return 'state-warning handled';
+                case $serviceGroup->services_unknown_handled > 0:
+                    return 'state-unknown handled';
+                case $serviceGroup->services_pending > 0:
+                    return 'state-pending';
+                case $serviceGroup->services_ok > 0:
+                    return 'state-ok';
+                default:
+                    return 'state-none';
+            }
+        });
+
+        $this->render('servicegroup-grid-alt');
+    }
+
+    /**
      * List host groups
      */
     public function hostgroupsAction()
@@ -538,6 +601,52 @@ class ListController extends Controller
         ), $hostGroups);
         $this->filterQuery($hostGroups);
         $this->setupLimitControl();
+
+        $this->view->hostGroups = $hostGroups;
+    }
+
+    /**
+     * List host groups
+     */
+    public function hostgroupGridAction()
+    {
+        $this->addTitleTab(
+            'hostgroup-grid',
+            $this->translate('Host Group Grid'),
+            $this->translate('Show the Host Group Grid')
+        );
+
+        $this->setAutorefreshInterval(12);
+
+        $hostGroups = $this->backend->select()->from('hostgroupsummary', [
+            'hostgroup_alias',
+            'hostgroup_name',
+            'hosts_down_handled',
+            'hosts_down_unhandled',
+            'hosts_pending',
+            'hosts_total',
+            'hosts_unreachable_handled',
+            'hosts_unreachable_unhandled',
+            'hosts_up',
+            'services_critical_handled',
+            'services_critical_unhandled',
+            'services_ok',
+            'services_pending',
+            'services_total',
+            'services_unknown_handled',
+            'services_unknown_unhandled',
+            'services_warning_handled',
+            'services_warning_unhandled'
+        ]);
+        $this->applyRestriction('monitoring/filter/objects', $hostGroups);
+        $this->filterQuery($hostGroups);
+
+        $this->setupSortControl([
+            'hosts_severity'    => $this->translate('Severity'),
+            'hostgroup_alias'   => $this->translate('Host Group Name'),
+            'hosts_total'       => $this->translate('Total Hosts'),
+            'services_total'    => $this->translate('Total Services')
+        ], $hostGroups, ['hosts_severity' => 'desc']);
 
         $this->view->hostGroups = $hostGroups;
     }

@@ -1,0 +1,26 @@
+<?php if (! $this->compact): ?>
+<div class="controls">
+    <?= $this->tabs ?>
+    <div class="sort-controls-container">
+        <?= $this->sortBox ?>
+    </div>
+    <?= $this->filterEditor ?>
+</div>
+<?php endif ?>
+<div class="content" data-base-target="_next">
+<?php /** @var \Icinga\Module\Monitoring\DataView\Servicegroup $serviceGroups */
+if (! $serviceGroups->hasResult()): ?>
+    <p><?= $this->translate('No service groups found matching the filter.') ?></p>
+</div>
+<?php return; endif ?>
+<?php foreach ($serviceGroups as $serviceGroup): ?>
+    <?php $stateClass = $this->getStateClass($serviceGroup); ?>
+    <div class="group-grid-link <?= $stateClass ?>">
+    <?php if ($stateClass !== 'state-ok' && $stateClass !== 'state-none'): ?>
+        <?= $serviceGroup->servicegroup_alias ?>
+    <?php else: ?>
+        &nbsp;
+    <?php endif ?>
+    </div>
+<?php endforeach ?>
+</div>
